@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 import pickle
-from surprise import KNNWithMeans, Dataset, Reader
-from flask import current_app, g
+from surprise import Dataset, Reader
+from flask import g
 
 app = Flask(__name__)
 
@@ -26,28 +26,25 @@ def predict():
     user_id = data['userId']
     movie_id = data['movieId']
     prediction = algo.predict(user_id, movie_id)
-    return jsonify({'prediction': prediction.est})
+    return jsonify({ 'data': prediction.est })
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
     algo = load_model()
     data = request.get_json()
     user_id = data['userId']
-    n = data.get('n', 10)  # Default to 10 if not provided
+    n = data.get('n', 10)
 
-    # Load ratings data safely
     ratings = get_data()
 
-    # Get recommendations
     recommendations = get_top_n_recommendations(algo, ratings, user_id, n)
 
-    # Prepare response
     response = [{
-        'movieId': int(movie[0]),  # Ensure movieId is an int
-        'predictedRating': float(movie[1])  # Ensure predictedRating is a float
+        'movieId': int(movie[0]),
+        'predictedRating': float(movie[1])
     } for movie in recommendations]
 
-    return jsonify(response)
+    return jsonify({ 'data': response })
 
 @app.route('/update_dataset', methods=['POST'])
 def update_dataset():
@@ -56,7 +53,7 @@ def update_dataset():
     new_user_ratings = new_user_data['ratings']
     ratings = get_data()
     updated_ratings = add_new_user_ratings(ratings, new_user_id, new_user_ratings)
-    g.data = updated_ratings  # update global ratings data
+    g.data = updated_ratings
 
     reader = Reader(rating_scale=(1, 5))
     data = Dataset.load_from_df(updated_ratings[['userId', 'movieId', 'rating']], reader)
@@ -65,7 +62,7 @@ def update_dataset():
     algo.fit(trainset)
     save_model(algo)
 
-    return jsonify({'message': 'Dataset and model updated successfully'})
+    return jsonify({ 'data': 'Dataset and model updated successfully' })
 
 def add_new_user_ratings(ratings, new_user_id, movie_ratings):
     new_ratings = pd.DataFrame({
