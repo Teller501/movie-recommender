@@ -16,7 +16,7 @@ learn = load_learner('movie-recommender.pkl')
 # Define the schema for user input
 class UserRating(BaseModel):
     tmdb_id: int
-    rating: int
+    rating: float
 
 class UserRatings(BaseModel):
     user_id: int
