@@ -6,6 +6,10 @@ import torch
 from fastai.collab import *
 from fastai.tabular.all import *
 import torch.nn.functional as F
+import os
+from typing import List
+
+
 
 app = FastAPI()
 
@@ -18,7 +22,7 @@ class UserRating(BaseModel):
 
 class UserRatings(BaseModel):
     user_id: int
-    user_ratings: list[UserRating]
+    user_ratings: List[UserRating]
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -43,14 +47,16 @@ def recommend_movies(user_ratings: UserRatings):
             user_ratings_dicts.append(
                 {"user": user_ratings.user_id, "movie": internal_id, "rating": ur.rating})
         else:
-            raise HTTPException(status_code=404, detail=f"TMDB ID {
-                                ur.tmdb_id} not found in the dataset")
+            raise HTTPException(status_code=404, detail=f"TMDB ID {ur.tmdb_id} not found in the dataset")
 
-    new_ratings = pd.concat(
-        [ratings, pd.DataFrame(user_ratings_dicts)], ignore_index=True)
+    new_ratings_df = pd.DataFrame(user_ratings_dicts)
+    global ratings
+    ratings = pd.concat([ratings, new_ratings_df], ignore_index=True)
 
-    crosstab = pd.crosstab(new_ratings['user'], new_ratings['movie'],
-                           values=new_ratings['rating'], aggfunc='sum').fillna(0)
+    ratings.to_csv('updated_ratings.csv', index=False)
+
+    crosstab = pd.crosstab(ratings['user'], ratings['movie'],
+                           values=ratings['rating'], aggfunc='sum').fillna(0)
 
     other_users = crosstab.loc[crosstab.index != user_ratings.user_id].values
     new_user = crosstab.loc[crosstab.index ==
