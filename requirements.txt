@@ -3,3 +3,4 @@ pandas
 torch
 fastai
 uvicorn
+python-dotenv

@@ -6,10 +6,6 @@ import torch
 from fastai.collab import *
 from fastai.tabular.all import *
 import torch.nn.functional as F
-import os
-from typing import List
-
-
 
 app = FastAPI()
 
@@ -19,11 +15,9 @@ class UserRating(BaseModel):
     tmdb_id: int
     rating: float
 
-
 class UserRatings(BaseModel):
     user_id: int
-    user_ratings: List[UserRating]
-
+    user_ratings: list[UserRating]
 
 ssl._create_default_https_context = ssl._create_unverified_context
 path = untar_data(URLs.ML_100k)
@@ -37,7 +31,6 @@ links = pd.read_csv('links.csv')
 tmdb_to_internal = dict(zip(links['tmdbId'], links['movieId']))
 internal_to_tmdb = dict(zip(links['movieId'], links['tmdbId']))
 
-
 @app.post("/recommend/")
 def recommend_movies(user_ratings: UserRatings):
     user_ratings_dicts = []
@@ -49,14 +42,11 @@ def recommend_movies(user_ratings: UserRatings):
         else:
             raise HTTPException(status_code=404, detail=f"TMDB ID {ur.tmdb_id} not found in the dataset")
 
-    new_ratings_df = pd.DataFrame(user_ratings_dicts)
-    global ratings
-    ratings = pd.concat([ratings, new_ratings_df], ignore_index=True)
+    new_ratings = pd.concat(
+        [ratings, pd.DataFrame(user_ratings_dicts)], ignore_index=True)
 
-    ratings.to_csv('updated_ratings.csv', index=False)
-
-    crosstab = pd.crosstab(ratings['user'], ratings['movie'],
-                           values=ratings['rating'], aggfunc='sum').fillna(0)
+    crosstab = pd.crosstab(new_ratings['user'], new_ratings['movie'],
+                           values=new_ratings['rating'], aggfunc='sum').fillna(0)
 
     other_users = crosstab.loc[crosstab.index != user_ratings.user_id].values
     new_user = crosstab.loc[crosstab.index ==
@@ -82,5 +72,11 @@ def recommend_movies(user_ratings: UserRatings):
         rec for rec in recommendations_tmdb if rec is not None]
 
     return {"recommendations": recommendations_tmdb}
+
+@app.post("/reload-model/")
+def reload_model():
+    global learn
+    learn = load_learner('movie-recommender.pkl')
+    return {"detail": "Model reloaded successfully"}
 
 # start: uvicorn api:app --reload
