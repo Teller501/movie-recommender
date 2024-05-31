@@ -1,8 +1,15 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
+FROM python:3.8-slim
 
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Set the working directory
+WORKDIR /app
 
-COPY . /app
+# Copy only the necessary files
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
 
 CMD ["sh", "-c", "uvicorn api:app --host 0.0.0.0 --port $PORT"]

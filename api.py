@@ -6,6 +6,7 @@ import torch
 from fastai.collab import *
 from fastai.tabular.all import *
 import torch.nn.functional as F
+from typing import List
 
 app = FastAPI()
 
@@ -17,7 +18,7 @@ class UserRating(BaseModel):
 
 class UserRatings(BaseModel):
     user_id: int
-    user_ratings: list[UserRating]
+    user_ratings: List[UserRating]
 
 ssl._create_default_https_context = ssl._create_unverified_context
 path = untar_data(URLs.ML_100k)
