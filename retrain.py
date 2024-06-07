@@ -5,7 +5,7 @@ from fastai.tabular.all import *
 
 def retrain_model():
     ratings = pd.read_csv('updated_ratings.csv')
-    movies = pd.read_csv('path/to/movies.csv')
+    movies = pd.read_csv('movies.csv')
     
     ratings = ratings.merge(movies, on='movie')
 

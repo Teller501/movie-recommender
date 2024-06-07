@@ -21,11 +21,17 @@ class UserRatings(BaseModel):
     user_ratings: List[UserRating]
 
 ssl._create_default_https_context = ssl._create_unverified_context
-path = untar_data(URLs.ML_100k)
-ratings = pd.read_csv(path/'u.data', delimiter='\t', header=None,
-                      names=['user', 'movie', 'rating', 'timestamp'])
-movies = pd.read_csv(path/'u.item', delimiter='|', encoding='latin-1',
-                     usecols=(0, 1), names=('movie', 'title'), header=None)
+
+movies_path = 'movies.csv'
+ratings_path = 'ratings.csv'
+
+ratings = pd.read_csv(ratings_path, delimiter=',', skiprows=1, header=None, 
+                      names=['user','movie','rating','timestamp'])
+movies = pd.read_csv(movies_path, usecols=(0,1), names=('movie','title'), header=None)
+
+movies['movie'] = movies['movie'].astype(str)
+ratings['movie'] = ratings['movie'].astype(str)
+
 ratings = ratings.merge(movies)
 
 links = pd.read_csv('links.csv')
