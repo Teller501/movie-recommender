@@ -73,12 +73,19 @@ def recommend_movies(user_ratings: UserRatings):
         new_user_vector, learn.model.i_weight.weight.T) + learn.model.i_bias.weight.T + new_user_bias
     top5_ratings = pred_ratings.topk(5)
 
-    recommendations_internal = top5_ratings.indices.tolist()[0]
+    recommendations_titles = [learn.dls.classes['title'][i] for i in top5_ratings.indices.tolist()[0]]
 
-    recommendations_tmdb = [internal_to_tmdb.get(
-        rec, None) for rec in recommendations_internal]
-    recommendations_tmdb = [
-        rec for rec in recommendations_tmdb if rec is not None]
+    print(f"Recommended Movie Titles: {recommendations_titles}")
+
+    recommendations_internal_ids = []
+    for title in recommendations_titles:
+        movie_id = movies[movies['title'] == title]['movie'].values[0]
+        recommendations_internal_ids.append(movie_id)
+
+    print(f"Internal Movie IDs: {recommendations_internal_ids}")
+
+    recommendations_tmdb = [internal_to_tmdb.get(int(movie_id), None) for movie_id in recommendations_internal_ids]
+    recommendations_tmdb = [rec for rec in recommendations_tmdb if rec is not None]
 
     return {"recommendations": recommendations_tmdb}
 
