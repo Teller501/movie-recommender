@@ -51,6 +51,8 @@ def recommend_movies(user_ratings: UserRatings):
 
     new_ratings = pd.concat(
         [ratings, pd.DataFrame(user_ratings_dicts)], ignore_index=True)
+    
+    new_ratings['movie'] = new_ratings['movie'].astype(str)
 
     crosstab = pd.crosstab(new_ratings['user'], new_ratings['movie'],
                            values=new_ratings['rating'], aggfunc='sum').fillna(0)
