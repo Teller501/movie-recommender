@@ -7,6 +7,7 @@ from fastai.collab import *
 from fastai.tabular.all import *
 import torch.nn.functional as F
 from typing import List
+import time
 
 app = FastAPI()
 
@@ -86,6 +87,21 @@ def recommend_movies(user_ratings: UserRatings):
 
     recommendations_tmdb = [internal_to_tmdb.get(int(movie_id), None) for movie_id in recommendations_internal_ids]
     recommendations_tmdb = [rec for rec in recommendations_tmdb if rec is not None]
+
+    print(f"TMDB IDs: {recommendations_tmdb}")
+
+    updated_ratings_df = pd.DataFrame(user_ratings_dicts)
+    updated_ratings_path = 'updated_ratings.csv'
+
+    try:
+        updated_ratings = pd.read_csv(updated_ratings_path)
+    except FileNotFoundError:
+        updated_ratings = pd.DataFrame(columns=['user', 'movie', 'rating', 'timestamp', 'title'])
+
+    updated_ratings = pd.concat([updated_ratings, updated_ratings_df], ignore_index=True)
+    updated_ratings.to_csv(updated_ratings_path, index=False)
+
+    print(f"Updated Ratings DataFrame:\n{updated_ratings}")
 
     return {"recommendations": recommendations_tmdb}
 
