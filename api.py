@@ -74,21 +74,17 @@ def recommend_movies(user_ratings: UserRatings):
         new_user_vector, learn.model.i_weight.weight.T) + learn.model.i_bias.weight.T + new_user_bias
     top5_ratings = pred_ratings.topk(5)
 
-    recommendations_titles = [learn.dls.classes['title'][i] for i in top5_ratings.indices.tolist()[0]]
+    print(learn.classes)
 
-    print(f"Recommended Movie Titles: {recommendations_titles}")
+    recommendations_titles = [learn.dls.classes['title_x'][i] for i in top5_ratings.indices.tolist()[0]]
 
     recommendations_internal_ids = []
     for title in recommendations_titles:
         movie_id = movies[movies['title'] == title]['movie'].values[0]
         recommendations_internal_ids.append(movie_id)
 
-    print(f"Internal Movie IDs: {recommendations_internal_ids}")
-
     recommendations_tmdb = [internal_to_tmdb.get(int(movie_id), None) for movie_id in recommendations_internal_ids]
     recommendations_tmdb = [rec for rec in recommendations_tmdb if rec is not None]
-
-    print(f"TMDB IDs: {recommendations_tmdb}")
 
     updated_ratings_df = pd.DataFrame(user_ratings_dicts)
     updated_ratings_path = 'updated_ratings.csv'
@@ -100,8 +96,6 @@ def recommend_movies(user_ratings: UserRatings):
 
     updated_ratings = pd.concat([updated_ratings, updated_ratings_df], ignore_index=True)
     updated_ratings.to_csv(updated_ratings_path, index=False)
-
-    print(f"Updated Ratings DataFrame:\n{updated_ratings}")
 
     return {"recommendations": recommendations_tmdb}
 

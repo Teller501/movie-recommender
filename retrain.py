@@ -15,8 +15,6 @@ def retrain_model():
     
     ratings = ratings.merge(movies, on='movie')
 
-    print(ratings.shape)
-
     dls = CollabDataLoaders.from_df(ratings, item_name='title_x', bs=64)
     
     learn = collab_learner(dls, n_factors=50, y_range=(0.5, 5.5))
